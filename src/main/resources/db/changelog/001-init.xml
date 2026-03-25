@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <!-- Таблица user -->
+    <changeSet id="1" author="developer">
+        <createTable tableName="user">
+            <column name="uuid" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="login" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="mail" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Таблица category -->
+    <changeSet id="2" author="developer">
+        <createTable tableName="category">
+            <column name="uuid" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Таблица transaction -->
+    <changeSet id="3" author="developer">
+        <createTable tableName="transaction">
+            <column name="uuid" type="CHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="CHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category_id" type="CHAR(36)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="amount" type="DECIMAL(12,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(500)"/>
+            <column name="transaction_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Внешние ключи и индексы -->
+    <changeSet id="4" author="developer">
+        <!-- Индекс для user_id -->
+        <createIndex tableName="transaction" indexName="idx_transaction_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+        <!-- Внешний ключ transaction.user_id -> user.uuid -->
+        <addForeignKeyConstraint
+                baseTableName="transaction"
+                baseColumnNames="user_id"
+                constraintName="fk_transaction_user"
+                referencedTableName="user"
+                referencedColumnNames="uuid"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="5" author="developer">
+        <!-- Индекс для category_id -->
+        <createIndex tableName="transaction" indexName="idx_transaction_category_id">
+            <column name="category_id"/>
+        </createIndex>
+
+        <!-- Внешний ключ transaction.category_id -> category.uuid -->
+        <addForeignKeyConstraint
+                baseTableName="transaction"
+                baseColumnNames="category_id"
+                constraintName="fk_transaction_category"
+                referencedTableName="category"
+                referencedColumnNames="uuid"
+                onDelete="SET NULL"/>
+    </changeSet>
+
+</databaseChangeLog>
