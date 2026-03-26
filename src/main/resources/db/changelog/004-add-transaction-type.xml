@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="11" author="developer">
+        <addColumn tableName="transaction">
+            <column name="type" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="12" author="developer">
+        <sql>ALTER TABLE transaction ADD CONSTRAINT chk_transaction_type CHECK (type IN ('INCOME', 'EXPENSE'));</sql>
+    </changeSet>
+
+</databaseChangeLog>

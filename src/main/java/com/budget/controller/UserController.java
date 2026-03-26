@@ -1,7 +1,9 @@
 package com.budget.controller;
 
 import com.budget.dto.UserCreateRequest;
+import com.budget.dto.UserResponse;
 import com.budget.entity.User;
+import com.budget.mapper.UserMapper;
 import com.budget.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,10 +16,12 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final UserMapper userMapper;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public User createUser(@Valid @RequestBody UserCreateRequest request) {
-        return userService.createUser(request);
+    public UserResponse createUser(@Valid @RequestBody UserCreateRequest request) {
+        User user = userService.createUser(request);
+        return userMapper.toResponse(user);
     }
 }

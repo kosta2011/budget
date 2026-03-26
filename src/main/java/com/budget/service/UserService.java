@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.budget.exception.UserAlreadyExistsException;
 
 @Service
 @RequiredArgsConstructor
@@ -20,19 +21,19 @@ public class UserService {
     @Transactional
     public User createUser(UserCreateRequest request) {
         // Проверка на уникальность логина
-        if (userRepository.findByLogin(request.getLogin()).isPresent()) {
-            throw new RuntimeException("Login already exists");
+        if (userRepository.findByLogin(request.login()).isPresent()) {
+            throw new UserAlreadyExistsException("Login already exists");
         }
         // Проверка на уникальность email
-        if (userRepository.findByMail(request.getMail()).isPresent()) {
-            throw new RuntimeException("Email already exists");
+        if (userRepository.findByMail(request.mail()).isPresent()) {
+            throw new UserAlreadyExistsException("Email already exists");
         }
 
         // Преобразуем DTO в Entity
         User user = userMapper.toEntity(request);
 
         // Шифруем пароль
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPassword(passwordEncoder.encode(request.password()));
 
         // Сохраняем (uuid сгенерируется в конструкторе)
         return userRepository.save(user);

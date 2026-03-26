@@ -7,5 +7,7 @@
 
     <include file="001-init.xml" relativeToChangelogFile="true"/>
     <include file="002-modify-timestamps.xml" relativeToChangelogFile="true"/>
+    <include file="003-rename-user-table.xml" relativeToChangelogFile="true"/>
+    <include file="004-add-transaction-type.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

@@ -1,6 +1,7 @@
 package com.budget.mapper;
 
 import com.budget.dto.UserCreateRequest;
+import com.budget.dto.UserResponse;
 import com.budget.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -8,8 +9,7 @@ import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
-
-    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
+    UserResponse toResponse(User user);
 
     // Преобразует UserCreateRequest в User
     @Mapping(target = "uuid", ignore = true)          // uuid будет сгенерирован в конструкторе

@@ -2,11 +2,11 @@
       application:
         name: budget
       datasource:
-        url: jdbc:mysql://localhost:3306/budget_db
-        username: root
-        password: dE27%t6!
-        driver-class-name: com.mysql.cj.jdbc.Driver
-        hikari:
+          url: jdbc:mysql://localhost:3306/budget_db?useSSL=false&serverTimezone=UTC
+          username: root
+          password: ${DB_PASSWORD}
+          driver-class-name: com.mysql.cj.jdbc.Driver
+      hikari:
           maximumPoolSize: 10
           minimumIdle: 5
       jpa:
@@ -20,3 +20,6 @@
       liquibase:
         enabled: true
         change-log: db/changelog/db.changelog-master.xml
+      security:
+        basic:
+          enabled: false
