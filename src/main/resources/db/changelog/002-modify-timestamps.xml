@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <!-- Добавляем поля created_at и updated_at в таблицу category -->
+    <changeSet id="6" author="developer">
+        <addColumn tableName="category">
+            <column name="created_at" type="TIMESTAMP(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(3)">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <!-- Меняем тип created_at и updated_at с DATETIME на TIMESTAMP(3) в таблице user -->
+    <changeSet id="7" author="developer">
+        <modifyDataType tableName="user" columnName="created_at" newDataType="TIMESTAMP(3)"/>
+        <modifyDataType tableName="user" columnName="updated_at" newDataType="TIMESTAMP(3)"/>
+    </changeSet>
+
+    <!-- Меняем тип created_at и updated_at в таблице transaction -->
+    <changeSet id="8" author="developer">
+        <modifyDataType tableName="transaction" columnName="created_at" newDataType="TIMESTAMP(3)"/>
+        <modifyDataType tableName="transaction" columnName="updated_at" newDataType="TIMESTAMP(3)"/>
+    </changeSet>
+
+    <!-- Меняем тип созданных полей в таблице category -->
+    <changeSet id="9" author="developer">
+        <modifyDataType tableName="category" columnName="created_at" newDataType="TIMESTAMP(3)"/>
+        <modifyDataType tableName="category" columnName="updated_at" newDataType="TIMESTAMP(3)"/>
+    </changeSet>
+
+</databaseChangeLog>
