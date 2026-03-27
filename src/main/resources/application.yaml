@@ -4,7 +4,7 @@
       datasource:
           url: jdbc:mysql://localhost:3306/budget_db?useSSL=false&serverTimezone=UTC
           username: root
-          password: ${DB_PASSWORD}
+          password: ${DB_PASSWORD:dE27%t6!}
           driver-class-name: com.mysql.cj.jdbc.Driver
       hikari:
           maximumPoolSize: 10
