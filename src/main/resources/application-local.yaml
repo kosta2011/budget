@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: budget
+  datasource:
+    url: jdbc:mysql://localhost:3306/budget_db?useSSL=false&serverTimezone=UTC
+    username: root
+    password: dE27%t6!

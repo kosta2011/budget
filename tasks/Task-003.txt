@@ -1,0 +1,23 @@
+TASK-03 — CRUD категорий
+
+POST /api/categories
+Request:  { "name": "string" }          // @NotBlank
+Response: { "uuid": "string", "name": "string", "createdAt": "datetime" }
+Status:   201
+
+
+GET /api/categories — список всех категорий
+Response: [{ "uuid": "string", "name": "string", "createdAt": "datetime" }]
+Status:   200
+
+
+PUT /api/categories/{uuid}
+Request:  { "name": "string" }          // @NotBlank
+Response: { "uuid": "string", "name": "string", "createdAt": "datetime", "updatedAt": "datetime" }
+Status:   200
+Errors:   404 если не найдена
+
+
+DELETE /api/categories/{uuid}
+Status:   204
+Errors:   404 если не найдена
