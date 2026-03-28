@@ -29,12 +29,13 @@ public class CategoryController {
     }
 
     @PutMapping("/{uuid}")
-    public CategoryPutResponse update(@PathVariable UUID uuid, @Valid @RequestBody CategoryPutRequest request) {
+    public CategoryPutResponse update(@PathVariable String uuid, @Valid @RequestBody CategoryPutRequest request) {
         return categoryService.update(uuid, request);
     }
 
     @DeleteMapping("/{uuid}")
-    public void delete(@PathVariable UUID uuid) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable String uuid) {
         categoryService.delete(uuid);
     }
 }

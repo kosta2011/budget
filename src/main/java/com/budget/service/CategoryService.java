@@ -32,25 +32,17 @@ public class CategoryService {
         return categoryMapper.toCategoryGet(allCategories);
     }
 
-    public CategoryPutResponse update(UUID uuid, CategoryPutRequest request) {
-        Optional<Category> optionalCategory = categoryRepository.findById(uuid);
-
-        if (optionalCategory.isEmpty()) {
-            throw new EntityNotFoundException(String.format("Категория с uuid %s не найдена", uuid));
-        }
-        Category category = optionalCategory.get();
-        category.setName(request.name());
+    public CategoryPutResponse update(String uuid, CategoryPutRequest request) {
+        Category category = categoryRepository.findById(uuid)
+                .orElseThrow(() -> new EntityNotFoundException("Категория с uuid " + uuid + " не найдена"));
+        category.setName(request.name());   // если CategoryPutRequest — record
         Category savedCategory = categoryRepository.save(category);
-
         return categoryMapper.toCategoryPutResponse(savedCategory);
     }
 
-    public void delete(UUID uuid) {
-        Optional<Category> optionalCategory = categoryRepository.findById(uuid);
-        if (optionalCategory.isEmpty()) {
-            throw new EntityNotFoundException(String.format("Категория с uuid %s не найдена", uuid));
-        }
-        Category category = optionalCategory.get();
+    public void delete(String uuid) {
+        Category category = categoryRepository.findById(uuid)
+                .orElseThrow(() -> new EntityNotFoundException("Категория с uuid " + uuid + " не найдена"));
         categoryRepository.delete(category);
     }
 }
