@@ -10,6 +10,7 @@ import com.budget.exception.TransactionNotFoundException;
 import com.budget.mapper.TransactionMapper;
 import com.budget.repository.CategoryRepository;
 import com.budget.repository.TransactionRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +28,7 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
     private final TransactionMapper transactionMapper;
+    private final EntityManager entityManager;
 
     @Transactional
     public TransactionResponse create(TransactionCreateRequest request) {
@@ -36,11 +38,8 @@ public class TransactionService {
                     .orElseThrow(() -> new CategoryNotFoundException(request.categoryUuid()));
         }
         Transaction transaction = transactionMapper.toEntity(request, category);
-        transaction = transactionRepository.save(transaction);
-        // принудительно обновляем сущность из БД
-        transactionRepository.flush();
-        transaction = transactionRepository.findById(transaction.getUuid())
-                .orElseThrow(() -> new RuntimeException("Transaction not found after save"));
+        transaction = transactionRepository.saveAndFlush(transaction);
+        entityManager.refresh(transaction);
         return transactionMapper.toResponse(transaction);
     }
 
@@ -48,7 +47,14 @@ public class TransactionService {
     public Page<TransactionResponse> getAll(String categoryUuid, String type,
                                             LocalDate dateFrom, LocalDate dateTo,
                                             Pageable pageable) {
-        Specification<Transaction> spec = Specification.where(null);
+        // Валидация диапазона дат
+        if (dateFrom != null && dateTo != null && dateFrom.isAfter(dateTo)) {
+            throw new IllegalArgumentException("dateFrom cannot be after dateTo");
+        }
+
+        // Начинаем с условия "всегда true" (конъюнкция)
+        Specification<Transaction> spec = (root, query, cb) -> cb.conjunction();
+
         if (categoryUuid != null) {
             spec = spec.and((root, query, cb) ->
                     cb.equal(root.get("category").get("uuid"), categoryUuid));

@@ -6,7 +6,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record TransactionCreateRequest(
-        String categoryUuid,    // может быть null
+        String categoryUuid,
+        @NotNull(message = "Amount is required")
         @Positive(message = "Amount must be positive")
         BigDecimal amount,
         @NotBlank(message = "Type is required")

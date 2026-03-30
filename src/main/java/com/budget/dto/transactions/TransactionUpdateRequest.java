@@ -7,8 +7,15 @@ import java.time.LocalDate;
 
 public record TransactionUpdateRequest(
         String categoryUuid,
-        @Positive BigDecimal amount,
-        @NotBlank @Pattern(regexp = "INCOME|EXPENSE") String type,
-        @Size(max = 500) String description,
-        @NotNull @PastOrPresent LocalDate date
+        @NotNull(message = "Amount is required")
+        @Positive(message = "Amount must be positive")
+        BigDecimal amount,
+        @NotBlank(message = "Type is required")
+        @Pattern(regexp = "INCOME|EXPENSE", message = "Type must be INCOME or EXPENSE")
+        String type,
+        @Size(max = 500, message = "Description must not exceed 500 characters")
+        String description,
+        @NotNull(message = "Date is required")
+        @PastOrPresent(message = "Date must be in the past or present")
+        LocalDate date
 ) {}
