@@ -1,0 +1,99 @@
+package com.budget.service;
+
+import com.budget.dto.transactions.TransactionCreateRequest;
+import com.budget.dto.transactions.TransactionResponse;
+import com.budget.dto.transactions.TransactionUpdateRequest;
+import com.budget.entity.Category;
+import com.budget.entity.Transaction;
+import com.budget.exception.CategoryNotFoundException;
+import com.budget.exception.TransactionNotFoundException;
+import com.budget.mapper.TransactionMapper;
+import com.budget.repository.CategoryRepository;
+import com.budget.repository.TransactionRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Service
+@RequiredArgsConstructor
+public class TransactionService {
+
+    private final TransactionRepository transactionRepository;
+    private final CategoryRepository categoryRepository;
+    private final TransactionMapper transactionMapper;
+
+    @Transactional
+    public TransactionResponse create(TransactionCreateRequest request) {
+        Category category = null;
+        if (request.categoryUuid() != null) {
+            category = categoryRepository.findById(request.categoryUuid())
+                    .orElseThrow(() -> new CategoryNotFoundException(request.categoryUuid()));
+        }
+        Transaction transaction = transactionMapper.toEntity(request, category);
+        transaction = transactionRepository.save(transaction);
+        // принудительно обновляем сущность из БД
+        transactionRepository.flush();
+        transaction = transactionRepository.findById(transaction.getUuid())
+                .orElseThrow(() -> new RuntimeException("Transaction not found after save"));
+        return transactionMapper.toResponse(transaction);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TransactionResponse> getAll(String categoryUuid, String type,
+                                            LocalDate dateFrom, LocalDate dateTo,
+                                            Pageable pageable) {
+        Specification<Transaction> spec = Specification.where(null);
+        if (categoryUuid != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("category").get("uuid"), categoryUuid));
+        }
+        if (type != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("type"), type));
+        }
+        if (dateFrom != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.greaterThanOrEqualTo(root.get("transactionDate"), dateFrom));
+        }
+        if (dateTo != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.lessThanOrEqualTo(root.get("transactionDate"), dateTo));
+        }
+        return transactionRepository.findAll(spec, pageable)
+                .map(transactionMapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public TransactionResponse getByUuid(String uuid) {
+        Transaction transaction = transactionRepository.findById(uuid)
+                .orElseThrow(() -> new TransactionNotFoundException(uuid));
+        return transactionMapper.toResponse(transaction);
+    }
+
+    @Transactional
+    public TransactionResponse update(String uuid, TransactionUpdateRequest request) {
+        Transaction transaction = transactionRepository.findById(uuid)
+                .orElseThrow(() -> new TransactionNotFoundException(uuid));
+        Category category = null;
+        if (request.categoryUuid() != null) {
+            category = categoryRepository.findById(request.categoryUuid())
+                    .orElseThrow(() -> new CategoryNotFoundException(request.categoryUuid()));
+        }
+        transactionMapper.updateEntity(transaction, request, category);
+        transaction = transactionRepository.save(transaction);
+        return transactionMapper.toResponse(transaction);
+    }
+
+    @Transactional
+    public void delete(String uuid) {
+        Transaction transaction = transactionRepository.findById(uuid)
+                .orElseThrow(() -> new TransactionNotFoundException(uuid));
+        transactionRepository.delete(transaction);
+    }
+}
