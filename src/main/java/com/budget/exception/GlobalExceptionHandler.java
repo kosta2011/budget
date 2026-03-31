@@ -22,4 +22,17 @@ public class GlobalExceptionHandler {
     public Map<String, String> handleUserAlreadyExists(EntityNotFoundException ex) {
         return Map.of("error", ex.getMessage());
     }
+
+    @ExceptionHandler({TransactionNotFoundException.class, CategoryNotFoundException.class})
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<String, String> handleNotFound(RuntimeException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleIllegalArgument(IllegalArgumentException ex) {
+        return Map.of("error", ex.getMessage());
+    }
+
 }
