@@ -106,6 +106,7 @@ public class TransactionService {
         transactionRepository.delete(transaction);
     }
 
+    @Transactional(readOnly = true)
     public BalanceResponse getBalance(LocalDate dateFrom, LocalDate dateTo) {
         // Проверка корректности диапазона дат
         if (dateFrom != null && dateTo != null && dateFrom.isAfter(dateTo)) {
