@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import jakarta.persistence.Tuple;
+import java.util.List;
 
 public interface TransactionRepository extends JpaRepository<Transaction, String>, JpaSpecificationExecutor<Transaction> {
 
@@ -21,5 +22,18 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
             "WHERE (:dateFrom IS NULL OR t.transactionDate >= :dateFrom) " +
             "AND (:dateTo IS NULL OR t.transactionDate <= :dateTo)")
     Tuple getIncomeExpenseSum(@Param("dateFrom") LocalDate dateFrom, @Param("dateTo") LocalDate dateTo);
+
+    @Query("SELECT " +
+            "COALESCE(c.name, 'Без категории') AS categoryName, " +
+            "SUM(t.amount) AS total " +
+            "FROM Transaction t " +
+            "LEFT JOIN t.category c " +
+            "WHERE t.transactionDate BETWEEN :dateFrom AND :dateTo " +
+            "AND t.type = :type " +
+            "GROUP BY c.name " +
+            "ORDER BY total DESC")
+    List<Object[]> getCategorySummary(@Param("dateFrom") LocalDate dateFrom,
+                                      @Param("dateTo") LocalDate dateTo,
+                                      @Param("type") String type);
 
 }

@@ -4,6 +4,8 @@ import com.budget.dto.BalanceResponse;
 import com.budget.dto.transactions.TransactionCreateRequest;
 import com.budget.dto.transactions.TransactionResponse;
 import com.budget.dto.transactions.TransactionUpdateRequest;
+import com.budget.dto.analytics.AnalyticsItem;
+import com.budget.dto.analytics.AnalyticsResponse;
 import com.budget.entity.Category;
 import com.budget.entity.Transaction;
 import com.budget.exception.CategoryNotFoundException;
@@ -23,6 +25,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import jakarta.persistence.Tuple;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -119,6 +124,52 @@ public class TransactionService {
         if (totalExpense == null) totalExpense = BigDecimal.ZERO;
         BigDecimal balance = totalIncome.subtract(totalExpense);
         return new BalanceResponse(totalIncome, totalExpense, balance);
+    }
+
+    public AnalyticsResponse getCategorySummary(LocalDate dateFrom, LocalDate dateTo, String type) {
+        // Валидация дат
+        if (dateFrom == null || dateTo == null) {
+            throw new IllegalArgumentException("dateFrom and dateTo are required");
+        }
+        if (dateFrom.isAfter(dateTo)) {
+            throw new IllegalArgumentException("dateFrom cannot be after dateTo");
+        }
+// Установка типа по умолчанию (EXPENSE), приведение к корректному регистру и проверка допустимых значений
+        if (type == null || type.isBlank()) {
+            type = "EXPENSE";
+        } else if ("INCOME".equalsIgnoreCase(type)) {
+            type = "INCOME";
+        } else if ("EXPENSE".equalsIgnoreCase(type)) {
+            type = "EXPENSE";
+        } else {
+            throw new IllegalArgumentException("type must be INCOME or EXPENSE");
+        }
+        // Выполняем запрос
+        List<Object[]> rows = transactionRepository.getCategorySummary(dateFrom, dateTo, type);
+        BigDecimal grandTotal = BigDecimal.ZERO;
+        List<AnalyticsItem> items = new ArrayList<>();
+        for (Object[] row : rows) {
+            String categoryName = (String) row[0];
+            BigDecimal total = (BigDecimal) row[1];
+            grandTotal = grandTotal.add(total);
+            items.add(new AnalyticsItem(categoryName, total, null)); // percent вычислим позже
+        }
+        // Расчёт процентов с защитой от деления на ноль
+        if (grandTotal.compareTo(BigDecimal.ZERO) == 0) {
+            for (int i = 0; i < items.size(); i++) {
+                AnalyticsItem item = items.get(i);
+                items.set(i, new AnalyticsItem(item.categoryName(), item.total(), BigDecimal.ZERO));
+            }
+        } else {
+            for (int i = 0; i < items.size(); i++) {
+                AnalyticsItem item = items.get(i);
+                BigDecimal percent = item.total()
+                        .multiply(BigDecimal.valueOf(100))
+                        .divide(grandTotal, 2, RoundingMode.HALF_UP);
+                items.set(i, new AnalyticsItem(item.categoryName(), item.total(), percent));
+            }
+        }
+        return new AnalyticsResponse(dateFrom, dateTo, items, grandTotal);
     }
 
 }
