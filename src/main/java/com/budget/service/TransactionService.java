@@ -134,9 +134,15 @@ public class TransactionService {
         if (dateFrom.isAfter(dateTo)) {
             throw new IllegalArgumentException("dateFrom cannot be after dateTo");
         }
-        // type по умолчанию EXPENSE
+// Установка типа по умолчанию (EXPENSE), приведение к корректному регистру и проверка допустимых значений
         if (type == null || type.isBlank()) {
             type = "EXPENSE";
+        } else if ("INCOME".equalsIgnoreCase(type)) {
+            type = "INCOME";
+        } else if ("EXPENSE".equalsIgnoreCase(type)) {
+            type = "EXPENSE";
+        } else {
+            throw new IllegalArgumentException("type must be INCOME or EXPENSE");
         }
         // Выполняем запрос
         List<Object[]> rows = transactionRepository.getCategorySummary(dateFrom, dateTo, type);
@@ -148,12 +154,20 @@ public class TransactionService {
             grandTotal = grandTotal.add(total);
             items.add(new AnalyticsItem(categoryName, total, null)); // percent вычислим позже
         }
-        // Вычисляем проценты (2 знака)
-        for (AnalyticsItem item : items) {
-            BigDecimal percent = item.total()
-                    .multiply(BigDecimal.valueOf(100))
-                    .divide(grandTotal, 2, RoundingMode.HALF_UP);
-            items.set(items.indexOf(item), new AnalyticsItem(item.categoryName(), item.total(), percent));
+        // Расчёт процентов с защитой от деления на ноль
+        if (grandTotal.compareTo(BigDecimal.ZERO) == 0) {
+            for (int i = 0; i < items.size(); i++) {
+                AnalyticsItem item = items.get(i);
+                items.set(i, new AnalyticsItem(item.categoryName(), item.total(), BigDecimal.ZERO));
+            }
+        } else {
+            for (int i = 0; i < items.size(); i++) {
+                AnalyticsItem item = items.get(i);
+                BigDecimal percent = item.total()
+                        .multiply(BigDecimal.valueOf(100))
+                        .divide(grandTotal, 2, RoundingMode.HALF_UP);
+                items.set(i, new AnalyticsItem(item.categoryName(), item.total(), percent));
+            }
         }
         return new AnalyticsResponse(dateFrom, dateTo, items, grandTotal);
     }
