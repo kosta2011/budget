@@ -1,5 +1,6 @@
 package com.budget.controller;
 
+import com.budget.dto.BalanceResponse;
 import com.budget.dto.transactions.TransactionCreateRequest;
 import com.budget.dto.transactions.TransactionResponse;
 import com.budget.dto.transactions.TransactionUpdateRequest;
@@ -55,9 +56,11 @@ public class TransactionController {
         transactionService.delete(uuid);
     }
 
-    @GetMapping("/ping")
-    public String ping() {
-        return "pong";
+    @GetMapping("/balance")
+    public BalanceResponse getBalance(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo) {
+        return transactionService.getBalance(dateFrom, dateTo);
     }
 
 }

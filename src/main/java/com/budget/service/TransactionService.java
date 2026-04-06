@@ -1,5 +1,6 @@
 package com.budget.service;
 
+import com.budget.dto.BalanceResponse;
 import com.budget.dto.transactions.TransactionCreateRequest;
 import com.budget.dto.transactions.TransactionResponse;
 import com.budget.dto.transactions.TransactionUpdateRequest;
@@ -18,8 +19,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import jakarta.persistence.Tuple;
 
 @Service
 @RequiredArgsConstructor
@@ -102,4 +105,20 @@ public class TransactionService {
                 .orElseThrow(() -> new TransactionNotFoundException(uuid));
         transactionRepository.delete(transaction);
     }
+
+    @Transactional(readOnly = true)
+    public BalanceResponse getBalance(LocalDate dateFrom, LocalDate dateTo) {
+        // Проверка корректности диапазона дат
+        if (dateFrom != null && dateTo != null && dateFrom.isAfter(dateTo)) {
+            throw new IllegalArgumentException("dateFrom cannot be after dateTo");
+        }
+        Tuple result = transactionRepository.getIncomeExpenseSum(dateFrom, dateTo);
+        BigDecimal totalIncome = result.get("totalIncome", BigDecimal.class);
+        BigDecimal totalExpense = result.get("totalExpense", BigDecimal.class);
+        if (totalIncome == null) totalIncome = BigDecimal.ZERO;
+        if (totalExpense == null) totalExpense = BigDecimal.ZERO;
+        BigDecimal balance = totalIncome.subtract(totalExpense);
+        return new BalanceResponse(totalIncome, totalExpense, balance);
+    }
+
 }
