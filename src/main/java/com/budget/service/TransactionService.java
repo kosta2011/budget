@@ -4,6 +4,8 @@ import com.budget.dto.BalanceResponse;
 import com.budget.dto.transactions.TransactionCreateRequest;
 import com.budget.dto.transactions.TransactionResponse;
 import com.budget.dto.transactions.TransactionUpdateRequest;
+import com.budget.dto.analytics.AnalyticsItem;
+import com.budget.dto.analytics.AnalyticsResponse;
 import com.budget.entity.Category;
 import com.budget.entity.Transaction;
 import com.budget.exception.CategoryNotFoundException;
@@ -23,6 +25,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import jakarta.persistence.Tuple;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -119,6 +124,38 @@ public class TransactionService {
         if (totalExpense == null) totalExpense = BigDecimal.ZERO;
         BigDecimal balance = totalIncome.subtract(totalExpense);
         return new BalanceResponse(totalIncome, totalExpense, balance);
+    }
+
+    public AnalyticsResponse getCategorySummary(LocalDate dateFrom, LocalDate dateTo, String type) {
+        // Валидация дат
+        if (dateFrom == null || dateTo == null) {
+            throw new IllegalArgumentException("dateFrom and dateTo are required");
+        }
+        if (dateFrom.isAfter(dateTo)) {
+            throw new IllegalArgumentException("dateFrom cannot be after dateTo");
+        }
+        // type по умолчанию EXPENSE
+        if (type == null || type.isBlank()) {
+            type = "EXPENSE";
+        }
+        // Выполняем запрос
+        List<Object[]> rows = transactionRepository.getCategorySummary(dateFrom, dateTo, type);
+        BigDecimal grandTotal = BigDecimal.ZERO;
+        List<AnalyticsItem> items = new ArrayList<>();
+        for (Object[] row : rows) {
+            String categoryName = (String) row[0];
+            BigDecimal total = (BigDecimal) row[1];
+            grandTotal = grandTotal.add(total);
+            items.add(new AnalyticsItem(categoryName, total, null)); // percent вычислим позже
+        }
+        // Вычисляем проценты (2 знака)
+        for (AnalyticsItem item : items) {
+            BigDecimal percent = item.total()
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(grandTotal, 2, RoundingMode.HALF_UP);
+            items.set(items.indexOf(item), new AnalyticsItem(item.categoryName(), item.total(), percent));
+        }
+        return new AnalyticsResponse(dateFrom, dateTo, items, grandTotal);
     }
 
 }

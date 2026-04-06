@@ -1,6 +1,7 @@
 package com.budget.controller;
 
 import com.budget.dto.BalanceResponse;
+import com.budget.dto.analytics.AnalyticsResponse;
 import com.budget.dto.transactions.TransactionCreateRequest;
 import com.budget.dto.transactions.TransactionResponse;
 import com.budget.dto.transactions.TransactionUpdateRequest;
@@ -61,6 +62,14 @@ public class TransactionController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo) {
         return transactionService.getBalance(dateFrom, dateTo);
+    }
+
+    @GetMapping("/analytics/summary")
+    public AnalyticsResponse getCategorySummary(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
+            @RequestParam(required = false, defaultValue = "EXPENSE") String type) {
+        return transactionService.getCategorySummary(dateFrom, dateTo, type);
     }
 
 }
