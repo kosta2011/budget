@@ -1,0 +1,21 @@
+TASK-05 — баланс счёта
+GET /api/transactions/balance
+Query parameters:
+
+dateFrom (optional)
+
+dateTo (optional)
+
+Response (200):
+
+json
+{
+  "totalIncome": "decimal",
+  "totalExpense": "decimal",
+  "balance": "decimal"   // income - expense
+}
+Реализация:
+
+Один @Query с SUM + CASE WHEN type = 'INCOME'
+
+Без хранимого баланса

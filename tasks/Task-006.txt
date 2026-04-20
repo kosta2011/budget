@@ -1,0 +1,34 @@
+TASK-06 — аналитика по категориям
+GET /api/analytics/summary
+Query parameters:
+
+dateFrom @NotNull yyyy-MM-dd
+
+dateTo @NotNull yyyy-MM-dd
+
+type (optional) INCOME|EXPENSE, default EXPENSE
+
+Response (200):
+
+json
+{
+  "dateFrom": "yyyy-MM-dd",
+  "dateTo": "yyyy-MM-dd",
+  "items": [
+    {
+      "categoryName": "string",   // "Без категории" если null
+      "total": "decimal",
+      "percent": "decimal"        // доля от общей суммы, 2 знака
+    }
+  ],
+  "grandTotal": "decimal"
+}
+Ошибки:
+
+400 — если dateFrom > dateTo
+
+Реализация:
+
+GROUP BY category_id через Projection
+
+percent считается в сервисе, не в SQL
