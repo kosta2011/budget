@@ -16,6 +16,7 @@ json
   "dateTo": "yyyy-MM-dd",
   "items": [
     {
+      "categoryUuid": "string|null",
       "categoryName": "string",   // "Без категории" если null
       "total": "decimal",
       "percent": "decimal"        // доля от общей суммы, 2 знака
@@ -23,6 +24,9 @@ json
   ],
   "grandTotal": "decimal"
 }
+Если grandTotal = 0, API возвращает items: [] и grandTotal: "0.00"
+либо percent для всех элементов равен "0.00".
+
 Ошибки:
 
 400 — если dateFrom > dateTo

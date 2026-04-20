@@ -93,8 +93,14 @@
                 onDelete="SET NULL"/>
     </changeSet>
 
-    <!-- Индекс и внешний ключ для user_id (пока закомментирован, добавим позже)
     <changeSet id="5" author="developer">
+        <sql>
+            ALTER TABLE transactions ADD CONSTRAINT chk_transactions_type CHECK (type IN ('INCOME', 'EXPENSE'));
+        </sql>
+    </changeSet>
+
+    <!-- Индекс и внешний ключ для user_id (пока закомментирован, добавим позже)
+    <changeSet id="6" author="developer">
         <createIndex tableName="transactions" indexName="idx_transactions_user_id">
             <column name="user_id"/>
         </createIndex>

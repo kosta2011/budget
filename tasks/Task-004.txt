@@ -21,7 +21,8 @@ json
   "type",
   "description",
   "date",
-  "createdAt"
+  "createdAt",
+  "updatedAt"
 }
 Ошибки:
 

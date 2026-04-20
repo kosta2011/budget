@@ -134,7 +134,7 @@ public class TransactionService {
         if (dateFrom.isAfter(dateTo)) {
             throw new IllegalArgumentException("dateFrom cannot be after dateTo");
         }
-// Установка типа по умолчанию (EXPENSE), приведение к корректному регистру и проверка допустимых значений
+        // Установка типа по умолчанию (EXPENSE) и проверка допустимых значений
         if (type == null || type.isBlank()) {
             type = "EXPENSE";
         } else if ("INCOME".equalsIgnoreCase(type)) {
@@ -144,31 +144,39 @@ public class TransactionService {
         } else {
             throw new IllegalArgumentException("type must be INCOME or EXPENSE");
         }
+
         // Выполняем запрос
         List<Object[]> rows = transactionRepository.getCategorySummary(dateFrom, dateTo, type);
         BigDecimal grandTotal = BigDecimal.ZERO;
         List<AnalyticsItem> items = new ArrayList<>();
+
+        // Проходим по результатам, сохраняя categoryUuid, categoryName, total
         for (Object[] row : rows) {
-            String categoryName = (String) row[0];
-            BigDecimal total = (BigDecimal) row[1];
+            String categoryUuid = (String) row[0];
+            String categoryName = (String) row[1];
+            BigDecimal total = (BigDecimal) row[2];
             grandTotal = grandTotal.add(total);
-            items.add(new AnalyticsItem(categoryName, total, null)); // percent вычислим позже
+            items.add(new AnalyticsItem(categoryUuid, categoryName, total, null));
         }
+
         // Расчёт процентов с защитой от деления на ноль
         if (grandTotal.compareTo(BigDecimal.ZERO) == 0) {
+            // Если общая сумма 0, все проценты = 0
             for (int i = 0; i < items.size(); i++) {
                 AnalyticsItem item = items.get(i);
-                items.set(i, new AnalyticsItem(item.categoryName(), item.total(), BigDecimal.ZERO));
+                items.set(i, new AnalyticsItem(item.categoryUuid(), item.categoryName(), item.total(), BigDecimal.ZERO));
             }
         } else {
+            // Иначе вычисляем процент для каждой категории
             for (int i = 0; i < items.size(); i++) {
                 AnalyticsItem item = items.get(i);
                 BigDecimal percent = item.total()
                         .multiply(BigDecimal.valueOf(100))
                         .divide(grandTotal, 2, RoundingMode.HALF_UP);
-                items.set(i, new AnalyticsItem(item.categoryName(), item.total(), percent));
+                items.set(i, new AnalyticsItem(item.categoryUuid(), item.categoryName(), item.total(), percent));
             }
         }
+
         return new AnalyticsResponse(dateFrom, dateTo, items, grandTotal);
     }
 
