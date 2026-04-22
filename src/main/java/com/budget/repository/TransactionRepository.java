@@ -24,13 +24,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
     Tuple getIncomeExpenseSum(@Param("dateFrom") LocalDate dateFrom, @Param("dateTo") LocalDate dateTo);
 
     @Query("SELECT " +
+            "c.uuid AS categoryUuid, " +
             "COALESCE(c.name, 'Без категории') AS categoryName, " +
             "SUM(t.amount) AS total " +
             "FROM Transaction t " +
             "LEFT JOIN t.category c " +
             "WHERE t.transactionDate BETWEEN :dateFrom AND :dateTo " +
             "AND t.type = :type " +
-            "GROUP BY c.name " +
+            "GROUP BY c.uuid, c.name " +   // группировка по uuid и name
             "ORDER BY total DESC")
     List<Object[]> getCategorySummary(@Param("dateFrom") LocalDate dateFrom,
                                       @Param("dateTo") LocalDate dateTo,

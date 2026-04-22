@@ -1,0 +1,66 @@
+TASK-04 — CRUD транзакций
+POST /api/transactions
+Request:
+
+json
+{
+  "categoryUuid": "string|null",
+  "amount": "decimal > 0",           // @Positive
+  "type": "INCOME|EXPENSE",          // @NotNull
+  "description": "string|null",      // @Size(max=500)
+  "date": "yyyy-MM-dd"               // @NotNull @PastOrPresent
+}
+Response (201):
+
+json
+{
+  "uuid",
+  "categoryUuid",
+  "categoryName",
+  "amount",
+  "type",
+  "description",
+  "date",
+  "createdAt",
+  "updatedAt"
+}
+Ошибки:
+
+404 — если categoryUuid передан, но категория не найдена
+
+GET /api/transactions — с фильтрацией
+Query parameters:
+
+categoryUuid (optional)
+
+type (optional) INCOME|EXPENSE
+
+dateFrom (optional) yyyy-MM-dd
+
+dateTo (optional) yyyy-MM-dd
+
+page (default 0)
+
+size (default 20)
+
+Response (200):
+
+json
+Page<TransactionResponse>
+PUT /api/transactions/{uuid}
+Request: те же поля, что в Create (POST)
+
+Response (200):
+
+json
+TransactionResponse
+Ошибки:
+
+404 — транзакция не найдена
+
+DELETE /api/transactions/{uuid}
+Status: 204 (No Content)
+
+Ошибки:
+
+404 — транзакция не найдена

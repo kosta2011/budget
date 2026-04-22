@@ -12,5 +12,6 @@ public record TransactionResponse(
         String type,
         String description,
         LocalDate date,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) {}

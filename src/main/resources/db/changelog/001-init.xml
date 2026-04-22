@@ -3,11 +3,11 @@
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
-    <!-- Таблица user -->
+    <!-- Таблица users (было user) -->
     <changeSet id="1" author="developer">
-        <createTable tableName="user">
+        <createTable tableName="users">
             <column name="uuid" type="CHAR(36)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -20,16 +20,16 @@
             <column name="password" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="created_at" type="DATETIME">
+            <column name="created_at" type="TIMESTAMP(3)">
                 <constraints nullable="false"/>
             </column>
-            <column name="updated_at" type="DATETIME">
+            <column name="updated_at" type="TIMESTAMP(3)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
 
-    <!-- Таблица category -->
+    <!-- Таблица category (добавлены created_at, updated_at) -->
     <changeSet id="2" author="developer">
         <createTable tableName="category">
             <column name="uuid" type="CHAR(36)">
@@ -38,68 +38,80 @@
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
+            <column name="created_at" type="TIMESTAMP(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP(3)">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
     </changeSet>
 
-    <!-- Таблица transaction -->
+    <!-- Таблица transactions (было transaction, добавлен type, TIMESTAMP(3), убран user_id) -->
     <changeSet id="3" author="developer">
-        <createTable tableName="transaction">
+        <createTable tableName="transactions">
             <column name="uuid" type="CHAR(36)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="user_id" type="CHAR(36)">
-                <constraints nullable="false"/>
-            </column>
+            <!-- user_id пока не добавляем -->
             <column name="category_id" type="CHAR(36)">
                 <constraints nullable="true"/>
             </column>
             <column name="amount" type="DECIMAL(12,2)">
                 <constraints nullable="false"/>
             </column>
+            <column name="type" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
             <column name="description" type="VARCHAR(500)"/>
             <column name="transaction_date" type="DATE">
                 <constraints nullable="false"/>
             </column>
-            <column name="created_at" type="DATETIME">
+            <column name="created_at" type="TIMESTAMP(3)">
                 <constraints nullable="false"/>
             </column>
-            <column name="updated_at" type="DATETIME">
+            <column name="updated_at" type="TIMESTAMP(3)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
 
-    <!-- Внешние ключи и индексы -->
+    <!-- Индекс и внешний ключ для category_id (как у вас было, только с новыми именами) -->
     <changeSet id="4" author="developer">
-        <!-- Индекс для user_id -->
-        <createIndex tableName="transaction" indexName="idx_transaction_user_id">
-            <column name="user_id"/>
-        </createIndex>
-
-        <!-- Внешний ключ transaction.user_id -> user.uuid -->
-        <addForeignKeyConstraint
-                baseTableName="transaction"
-                baseColumnNames="user_id"
-                constraintName="fk_transaction_user"
-                referencedTableName="user"
-                referencedColumnNames="uuid"
-                onDelete="CASCADE"/>
-    </changeSet>
-
-    <changeSet id="5" author="developer">
         <!-- Индекс для category_id -->
-        <createIndex tableName="transaction" indexName="idx_transaction_category_id">
+        <createIndex tableName="transactions" indexName="idx_transactions_category_id">
             <column name="category_id"/>
         </createIndex>
 
-        <!-- Внешний ключ transaction.category_id -> category.uuid -->
+        <!-- Внешний ключ transactions.category_id -> category.uuid -->
         <addForeignKeyConstraint
-                baseTableName="transaction"
+                baseTableName="transactions"
                 baseColumnNames="category_id"
-                constraintName="fk_transaction_category"
+                constraintName="fk_transactions_category"
                 referencedTableName="category"
                 referencedColumnNames="uuid"
                 onDelete="SET NULL"/>
     </changeSet>
+
+    <changeSet id="5" author="developer">
+        <sql>
+            ALTER TABLE transactions ADD CONSTRAINT chk_transactions_type CHECK (type IN ('INCOME', 'EXPENSE'));
+        </sql>
+    </changeSet>
+
+    <!-- Индекс и внешний ключ для user_id (пока закомментирован, добавим позже)
+    <changeSet id="6" author="developer">
+        <createIndex tableName="transactions" indexName="idx_transactions_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <addForeignKeyConstraint
+                baseTableName="transactions"
+                baseColumnNames="user_id"
+                constraintName="fk_transactions_user"
+                referencedTableName="users"
+                referencedColumnNames="uuid"
+                onDelete="CASCADE"/>
+    </changeSet>
+    -->
 
 </databaseChangeLog>
