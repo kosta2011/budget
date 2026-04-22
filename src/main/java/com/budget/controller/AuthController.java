@@ -53,7 +53,6 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(username, password)
             );
             if (auth.isAuthenticated()) {
-                // Ищем пользователя в БД по логину
                 var user = userRepository.findByLogin(username)
                         .orElseThrow(() -> new RuntimeException("User not found"));
                 return ResponseEntity.ok(Map.of("userId", user.getUuid()));

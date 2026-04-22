@@ -31,11 +31,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .addFilterBefore(userIdAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        // Открываем статику
                         .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/favicon.ico").permitAll()
-                        // Открываем эндпоинт для проверки пароля Gateway
                         .requestMatchers("/api/auth/verify").permitAll()
-                        // Все остальные запросы требуют аутентификации
                         .anyRequest().authenticated()
                 );
         return http.build();
@@ -45,5 +42,4 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
 }
