@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Budget Manager – Budget</title>
+    <title>Budget Manager</title>
     <style>
-        /* Ваш стиль (я скопирую из вашего кода, он хорош) */
         * {
             box-sizing: border-box;
             font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -239,10 +238,6 @@
         .login-card button {
             width: 100%;
         }
-        .logout-btn {
-            background: #ef4444;
-            margin-left: 10px;
-        }
     </style>
 </head>
 <body>
@@ -326,8 +321,17 @@
 
 <script>
     // === Аутентификация ===
-    const GATEWAY_URL = 'http://localhost:8081';
-    let authToken = null; // базовый токен в виде "Basic base64"
+    let authToken = null;
+
+    function toBase64Utf8(str) {
+        const encoder = new TextEncoder();
+        const bytes = encoder.encode(str);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    }
 
     function showLoginForm() {
         const overlay = document.getElementById('loginOverlay');
@@ -341,55 +345,40 @@
             </div>
         `;
         overlay.style.display = 'flex';
-        document.getElementById('loginBtn').addEventListener('click', () => {
+        document.getElementById('loginBtn').addEventListener('click', async () => {
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value.trim();
             if (!username || !password) {
                 document.getElementById('loginError').innerText = 'Введите логин и пароль';
                 return;
             }
-            const token = btoa(`${username}:${password}`);
+            const token = toBase64Utf8(`${username}:${password}`);
             authToken = `Basic ${token}`;
-            // Проверяем, доступен ли API
-            fetch(`${GATEWAY_URL}/api/transactions`, { headers: { 'Authorization': authToken } })
-                .then(resp => {
-                    if (resp.ok) {
-                        overlay.style.display = 'none';
-                        document.getElementById('appContent').style.display = 'block';
-                        loadCategories();
-                        loadTransactions();
-                        refreshBalance();
-                    } else {
-                        document.getElementById('loginError').innerText = 'Неверный логин или пароль';
-                        authToken = null;
-                    }
-                })
-                .catch(() => {
-                    document.getElementById('loginError').innerText = 'Ошибка соединения с сервером';
-                    authToken = null;
-                });
+            // Проверяем доступность API (любой защищённый эндпоинт)
+            const resp = await fetch('/api/transactions', { headers: { 'Authorization': authToken } });
+            if (resp.ok) {
+                overlay.style.display = 'none';
+                document.getElementById('appContent').style.display = 'block';
+                loadCategories();
+                loadTransactions();
+                refreshBalance();
+            } else {
+                document.getElementById('loginError').innerText = 'Неверный логин или пароль';
+                authToken = null;
+            }
         });
     }
 
-    // Все fetch-запросы с добавлением заголовка Authorization
     function authFetch(url, options = {}) {
         const headers = options.headers || {};
         headers['Authorization'] = authToken;
         return fetch(url, { ...options, headers });
     }
 
-    // Остальной код (работа с API) – но с использованием authFetch
-    let currentPage = 0, currentSize = 20, currentFilters = {};
-    const pageSizeSelect = document.getElementById('pageSizeSelect');
-    pageSizeSelect.addEventListener('change', () => {
-        currentSize = parseInt(pageSizeSelect.value);
-        currentPage = 0;
-        loadTransactions();
-    });
-
+    // === Категории ===
     async function loadCategories() {
         try {
-            const resp = await authFetch(`${GATEWAY_URL}/api/categories`);
+            const resp = await authFetch('/api/categories');
             if (!resp.ok) throw new Error();
             const cats = await resp.json();
             const catSelect = document.getElementById('catUuid');
@@ -403,6 +392,18 @@
         } catch(e) { console.error(e); }
     }
 
+    // === Транзакции ===
+    let currentPage = 0;
+    let currentSize = 20;
+    let currentFilters = {};
+
+    const pageSizeSelect = document.getElementById('pageSizeSelect');
+    pageSizeSelect.addEventListener('change', () => {
+        currentSize = parseInt(pageSizeSelect.value);
+        currentPage = 0;
+        loadTransactions();
+    });
+
     async function loadTransactions() {
         const params = new URLSearchParams({ page: currentPage, size: currentSize });
         if (currentFilters.categoryUuid) params.append('categoryUuid', currentFilters.categoryUuid);
@@ -410,7 +411,7 @@
         if (currentFilters.dateFrom) params.append('dateFrom', currentFilters.dateFrom);
         if (currentFilters.dateTo) params.append('dateTo', currentFilters.dateTo);
         try {
-            const resp = await authFetch(`${GATEWAY_URL}/api/transactions?${params}`);
+            const resp = await authFetch(`/api/transactions?${params}`);
             if (!resp.ok) throw new Error();
             const data = await resp.json();
             renderTransactions(data.content);
@@ -418,19 +419,51 @@
         } catch(e) { console.error(e); }
     }
 
-    // Остальные функции (renderTransactions, renderPagination, deleteTransaction, createTransaction, refreshBalance, loadAnalytics) полностью аналогичны вашему коду,
-    // только вместо fetch используйте authFetch, а URL начинаются с GATEWAY_URL.
-    // Я приведу их сокращённо, но вы можете просто скопировать свои функции, заменив fetch на authFetch и добавив GATEWAY_URL.
+    function renderTransactions(transactions) {
+        const tbody = document.getElementById('transactionsBody');
+        tbody.innerHTML = '';
+        for (const tx of transactions) {
+            const row = tbody.insertRow();
+            row.insertCell(0).innerText = tx.uuid.substring(0,8)+'…';
+            row.insertCell(1).innerText = tx.categoryName || 'Без категории';
+            row.insertCell(2).innerText = tx.amount;
+            row.insertCell(3).innerHTML = `<span class="${tx.type==='INCOME'?'badge-income':'badge-expense'}">${tx.type==='INCOME'?'Доход':'Расход'}</span>`;
+            row.insertCell(4).innerText = tx.description || '';
+            row.insertCell(5).innerText = tx.date;
+            const btn = document.createElement('button');
+            btn.innerText = 'Удалить';
+            btn.className = 'btn-danger';
+            btn.onclick = () => deleteTransaction(tx.uuid);
+            const cell = row.insertCell(6);
+            cell.appendChild(btn);
+        }
+    }
 
-    // Здесь должны быть функции: renderTransactions, renderPagination, deleteTransaction, createTransaction, refreshBalance, loadAnalytics.
-    // Для экономии места я опишу только изменения: везде вызов fetch -> authFetch, URL начинается с `${GATEWAY_URL}/...`.
-    // Например:
+    function renderPagination(page) {
+        const container = document.getElementById('pagination');
+        container.innerHTML = '';
+        for (let i = 0; i < page.totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.innerText = i + 1;
+            if (i === currentPage) btn.classList.add('active');
+            btn.onclick = () => {
+                currentPage = i;
+                loadTransactions();
+            };
+            container.appendChild(btn);
+        }
+    }
+
     async function deleteTransaction(uuid) {
         if (!confirm('Удалить транзакцию?')) return;
         try {
-            const resp = await authFetch(`${GATEWAY_URL}/api/transactions/${uuid}`, { method: 'DELETE' });
-            if (resp.ok) { loadTransactions(); refreshBalance(); }
-            else alert('Ошибка удаления');
+            const resp = await authFetch(`/api/transactions/${uuid}`, { method: 'DELETE' });
+            if (resp.ok) {
+                loadTransactions();
+                refreshBalance();
+            } else {
+                alert('Ошибка удаления');
+            }
         } catch(e) { console.error(e); }
     }
 
@@ -440,10 +473,13 @@
         const type = document.getElementById('type').value;
         const description = document.getElementById('description').value || null;
         const date = document.getElementById('date').value;
-        if (isNaN(amount) || !date) { alert('Заполните сумму и дату'); return; }
+        if (isNaN(amount) || !date) {
+            alert('Заполните сумму и дату');
+            return;
+        }
         const body = { categoryUuid, amount, type, description, date };
         try {
-            const resp = await authFetch(`${GATEWAY_URL}/api/transactions`, {
+            const resp = await authFetch('/api/transactions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -464,14 +500,15 @@
         } catch(e) { console.error(e); }
     }
 
+    // === Баланс ===
     async function refreshBalance() {
         const from = document.getElementById('balanceDateFrom').value;
         const to = document.getElementById('balanceDateTo').value;
-        let url = `${GATEWAY_URL}/api/transactions/balance`;
+        let url = '/api/transactions/balance';
         const params = new URLSearchParams();
         if (from) params.append('dateFrom', from);
         if (to) params.append('dateTo', to);
-        if (params.toString()) url += '?'+params;
+        if (params.toString()) url += '?' + params;
         try {
             const resp = await authFetch(url);
             if (resp.ok) {
@@ -483,12 +520,79 @@
         } catch(e) { console.error(e); }
     }
 
+    // === Аналитика ===
     async function loadAnalytics() {
-        // аналогично, используем authFetch и GATEWAY_URL
-        // код аналогичен вашему, замените fetch на authFetch, добавьте GATEWAY_URL
+        const from = document.getElementById('analyticsDateFrom').value;
+        const to = document.getElementById('analyticsDateTo').value;
+        const type = document.getElementById('analyticsType').value;
+        if (!from || !to) {
+            alert('Укажите обе даты');
+            return;
+        }
+        const resultDiv = document.getElementById('analyticsResult');
+        resultDiv.innerHTML = '<p>Загрузка...</p>';
+
+        if (type === 'BOTH') {
+            const expenseUrl = `/api/transactions/analytics/summary?dateFrom=${from}&dateTo=${to}&type=EXPENSE`;
+            const incomeUrl = `/api/transactions/analytics/summary?dateFrom=${from}&dateTo=${to}&type=INCOME`;
+            try {
+                const [expResp, incResp] = await Promise.all([authFetch(expenseUrl), authFetch(incomeUrl)]);
+                if (!expResp.ok || !incResp.ok) throw new Error();
+                const expData = await expResp.json();
+                const incData = await incResp.json();
+
+                let html = `<div class="analytics-row">`;
+                // Расходы
+                html += `<div class="analytics-col"><h3>📉 Расходы</h3>`;
+                if (expData.items.length === 0) html += '<p>Нет расходов за период</p>';
+                else {
+                    html += `<table class="analytics-table"><thead><tr><th>Категория</th><th>Сумма</th><th>%</th></tr></thead><tbody>`;
+                    expData.items.forEach(item => {
+                        html += `<tr><td>${item.categoryName}</td><td>${item.total}</td><td>${item.percent}%</td></tr>`;
+                    });
+                    html += `</tbody></table><div class="grand-total">Всего расходов: ${expData.grandTotal}</div>`;
+                }
+                html += `</div>`;
+                // Доходы
+                html += `<div class="analytics-col"><h3>📈 Доходы</h3>`;
+                if (incData.items.length === 0) html += '<p>Нет доходов за период</p>';
+                else {
+                    html += `<table class="analytics-table"><thead><tr><th>Категория</th><th>Сумма</th><th>%</th></tr></thead><tbody>`;
+                    incData.items.forEach(item => {
+                        html += `<tr><td>${item.categoryName}</td><td>${item.total}</td><td>${item.percent}%</td></tr>`;
+                    });
+                    html += `</tbody></table><div class="grand-total">Всего доходов: ${incData.grandTotal}</div>`;
+                }
+                html += `</div></div>`;
+                resultDiv.innerHTML = html;
+            } catch(e) {
+                resultDiv.innerHTML = '<p class="error">Ошибка загрузки аналитики</p>';
+                console.error(e);
+            }
+        } else {
+            const url = `/api/transactions/analytics/summary?dateFrom=${from}&dateTo=${to}&type=${type}`;
+            try {
+                const resp = await authFetch(url);
+                if (!resp.ok) throw new Error();
+                const data = await resp.json();
+                let html = `<h4>Общая сумма: ${data.grandTotal}</h4>`;
+                if (data.items.length === 0) html += '<p>Нет данных за период</p>';
+                else {
+                    html += `<table class="analytics-table"><thead><tr><th>Категория</th><th>Сумма</th><th>%</th></tr></thead><tbody>`;
+                    data.items.forEach(item => {
+                        html += `<tr><td>${item.categoryName}</td><td>${item.total}</td><td>${item.percent}%</td></tr>`;
+                    });
+                    html += `</tbody></table>`;
+                }
+                resultDiv.innerHTML = html;
+            } catch(e) {
+                resultDiv.innerHTML = '<p class="error">Ошибка загрузки аналитики</p>';
+                console.error(e);
+            }
+        }
     }
 
-    // Обработчики событий (applyFilters, resetFilters, createBtn, refreshBalanceBtn, loadAnalyticsBtn)
+    // Обработчики
     document.getElementById('applyFilters').addEventListener('click', () => {
         currentFilters = {
             categoryUuid: document.getElementById('filterCategoryUuid').value || null,
@@ -512,7 +616,6 @@
     document.getElementById('refreshBalanceBtn').addEventListener('click', refreshBalance);
     document.getElementById('loadAnalyticsBtn').addEventListener('click', loadAnalytics);
 
-    // Запуск приложения – показываем форму логина
     window.onload = () => {
         showLoginForm();
     };
