@@ -23,3 +23,8 @@
       security:
         basic:
           enabled: false
+
+    # Внутренний секретный токен (должен совпадать с токеном в Gateway)
+    app:
+      internal:
+        token: ${INTERNAL_TOKEN:default-secret-change-in-production}
