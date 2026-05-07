@@ -1,8 +1,624 @@
 <!DOCTYPE html>
-<html>
-<head><title>Budget App</title></head>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Manager</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background: #f1f5f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+        h2 {
+            font-size: 1.3rem;
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: flex-end;
+            margin-bottom: 12px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 130px;
+        }
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #334155;
+        }
+        .form-group input, .form-group select {
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.9rem;
+            background: white;
+        }
+        button {
+            padding: 8px 16px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .btn-secondary {
+            background: #94a3b8;
+        }
+        .btn-secondary:hover {
+            background: #64748b;
+        }
+        .btn-danger {
+            background: #ef4444;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        th, td {
+            text-align: left;
+            padding: 10px 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+        }
+        .badge-income {
+            background: #d1fae5;
+            color: #10b981;
+            padding: 2px 8px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .badge-expense {
+            background: #fee2e2;
+            color: #ef4444;
+            padding: 2px 8px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .balance-compact {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 12px 20px;
+            display: inline-block;
+            border: 1px solid #e2e8f0;
+            margin-top: 8px;
+            width: auto;
+        }
+        .balance-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: baseline;
+        }
+        .balance-item {
+            font-size: 1rem;
+        }
+        .balance-item strong {
+            font-size: 1.2rem;
+            margin-left: 6px;
+        }
+        .balance-total {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 6px;
+        }
+        .balance-total span {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-left: 8px;
+        }
+        .filters-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: flex-end;
+            margin-bottom: 16px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 16px;
+        }
+        .pagination button {
+            background: white;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            padding: 6px 12px;
+        }
+        .pagination button.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        .page-size-selector {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .analytics-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .analytics-col {
+            flex: 1;
+            min-width: 240px;
+            background: #fafcff;
+            border-radius: 12px;
+            padding: 8px;
+        }
+        .message {
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: #10b981;
+        }
+        .error {
+            color: #ef4444;
+        }
+        .grand-total {
+            margin-top: 12px;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .login-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .login-card input {
+            width: 100%;
+            margin-bottom: 12px;
+        }
+        .login-card button {
+            width: 100%;
+        }
+    </style>
+</head>
 <body>
-<h1>Welcome to Budget Manager</h1>
-<p>API Gateway is running on port 8081. Use Basic Auth to access /api/...</p>
+<div id="loginOverlay" style="display: none;"></div>
+<div class="container" id="appContent" style="display: none;">
+    <!-- Форма создания транзакции -->
+    <div class="card">
+        <h2>➕ Новая транзакция</h2>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Категория</label>
+                <select id="catUuid"><option value="">Без категории</option></select>
+            </div>
+            <div class="form-group">
+                <label>Сумма *</label>
+                <input type="number" id="amount" step="0.01" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Тип</label>
+                <select id="type"><option value="EXPENSE">Расход</option><option value="INCOME">Доход</option></select>
+            </div>
+            <div class="form-group">
+                <label>Описание</label>
+                <input type="text" id="description" placeholder="необязательно">
+            </div>
+            <div class="form-group">
+                <label>Дата *</label>
+                <input type="date" id="date">
+            </div>
+            <div class="form-group">
+                <button id="createBtn">Создать</button>
+            </div>
+        </div>
+        <div id="createMessage" class="message"></div>
+    </div>
+
+    <!-- Баланс -->
+    <div class="card">
+        <h2>📊 Баланс</h2>
+        <div class="form-row">
+            <div class="form-group"><label>Дата от</label><input type="date" id="balanceDateFrom"></div>
+            <div class="form-group"><label>Дата до</label><input type="date" id="balanceDateTo"></div>
+            <div class="form-group"><button id="refreshBalanceBtn">Показать</button></div>
+        </div>
+        <div id="balanceResult" class="balance-compact">
+            <div class="balance-row"><div class="balance-item">💰 Доход: <strong id="totalIncome">0</strong></div><div class="balance-item">💸 Расход: <strong id="totalExpense">0</strong></div></div>
+            <div class="balance-total">⚖️ Баланс: <span id="balance">0</span></div>
+        </div>
+    </div>
+
+    <!-- Фильтры и список транзакций -->
+    <div class="card">
+        <h2>📋 Транзакции</h2>
+        <div class="filters-row">
+            <div class="form-group"><label>Категория</label><select id="filterCategoryUuid"><option value="">Все категории</option></select></div>
+            <div class="form-group"><label>Тип</label><select id="filterType"><option value="">Все</option><option value="INCOME">Доход</option><option value="EXPENSE">Расход</option></select></div>
+            <div class="form-group"><label>Дата от</label><input type="date" id="filterDateFrom"></div>
+            <div class="form-group"><label>Дата до</label><input type="date" id="filterDateTo"></div>
+            <div class="form-group"><button id="applyFilters">Применить</button></div>
+            <div class="form-group"><button id="resetFilters" class="btn-secondary">Сбросить</button></div>
+        </div>
+        <div class="page-size-selector"><label>Показывать на странице:</label><select id="pageSizeSelect"><option value="10">10</option><option value="15">15</option><option value="20" selected>20</option><option value="50">50</option></select></div>
+        <div style="overflow-x: auto;">
+            <table><thead><tr><th>UUID</th><th>Категория</th><th>Сумма</th><th>Тип</th><th>Описание</th><th>Дата</th><th></th></tr></thead><tbody id="transactionsBody"></tbody></table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Аналитика по категориям -->
+    <div class="card">
+        <h2>📈 Аналитика по категориям</h2>
+        <div class="form-row">
+            <div class="form-group"><label>Дата от</label><input type="date" id="analyticsDateFrom"></div>
+            <div class="form-group"><label>Дата до</label><input type="date" id="analyticsDateTo"></div>
+            <div class="form-group"><label>Тип</label><select id="analyticsType"><option value="EXPENSE">Расходы</option><option value="INCOME">Доходы</option><option value="BOTH">Общая</option></select></div>
+            <div class="form-group"><button id="loadAnalyticsBtn">Показать</button></div>
+        </div>
+        <div id="analyticsResult"></div>
+    </div>
+</div>
+
+<script>
+    // === Аутентификация ===
+    let authToken = null;
+
+    function toBase64Utf8(str) {
+        const encoder = new TextEncoder();
+        const bytes = encoder.encode(str);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    }
+
+    function showLoginForm() {
+        const overlay = document.getElementById('loginOverlay');
+        overlay.innerHTML = `
+            <div class="login-card">
+                <h3>Вход в систему</h3>
+                <input type="text" id="loginUsername" placeholder="Логин">
+                <input type="password" id="loginPassword" placeholder="Пароль">
+                <button id="loginBtn">Войти</button>
+                <div id="loginError" style="color:red; margin-top:8px;"></div>
+            </div>
+        `;
+        overlay.style.display = 'flex';
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            if (!username || !password) {
+                document.getElementById('loginError').innerText = 'Введите логин и пароль';
+                return;
+            }
+            const token = toBase64Utf8(`${username}:${password}`);
+            authToken = `Basic ${token}`;
+            // Проверяем доступность API (любой защищённый эндпоинт)
+            const resp = await fetch('/api/transactions', { headers: { 'Authorization': authToken } });
+            if (resp.ok) {
+                overlay.style.display = 'none';
+                document.getElementById('appContent').style.display = 'block';
+                loadCategories();
+                loadTransactions();
+                refreshBalance();
+            } else {
+                document.getElementById('loginError').innerText = 'Неверный логин или пароль';
+                authToken = null;
+            }
+        });
+    }
+
+    function authFetch(url, options = {}) {
+        const headers = options.headers || {};
+        headers['Authorization'] = authToken;
+        return fetch(url, { ...options, headers });
+    }
+
+    // === Категории ===
+    async function loadCategories() {
+        try {
+            const resp = await authFetch('/api/categories');
+            if (!resp.ok) throw new Error();
+            const cats = await resp.json();
+            const catSelect = document.getElementById('catUuid');
+            const filterSelect = document.getElementById('filterCategoryUuid');
+            catSelect.innerHTML = '<option value="">Без категории</option>';
+            filterSelect.innerHTML = '<option value="">Все категории</option>';
+            cats.forEach(c => {
+                catSelect.appendChild(new Option(c.name, c.uuid));
+                filterSelect.appendChild(new Option(c.name, c.uuid));
+            });
+        } catch(e) { console.error(e); }
+    }
+
+    // === Транзакции ===
+    let currentPage = 0;
+    let currentSize = 20;
+    let currentFilters = {};
+
+    const pageSizeSelect = document.getElementById('pageSizeSelect');
+    pageSizeSelect.addEventListener('change', () => {
+        currentSize = parseInt(pageSizeSelect.value);
+        currentPage = 0;
+        loadTransactions();
+    });
+
+    async function loadTransactions() {
+        const params = new URLSearchParams({ page: currentPage, size: currentSize });
+        if (currentFilters.categoryUuid) params.append('categoryUuid', currentFilters.categoryUuid);
+        if (currentFilters.type) params.append('type', currentFilters.type);
+        if (currentFilters.dateFrom) params.append('dateFrom', currentFilters.dateFrom);
+        if (currentFilters.dateTo) params.append('dateTo', currentFilters.dateTo);
+        try {
+            const resp = await authFetch(`/api/transactions?${params}`);
+            if (!resp.ok) throw new Error();
+            const data = await resp.json();
+            renderTransactions(data.content);
+            renderPagination(data);
+        } catch(e) { console.error(e); }
+    }
+
+    function renderTransactions(transactions) {
+        const tbody = document.getElementById('transactionsBody');
+        tbody.innerHTML = '';
+        for (const tx of transactions) {
+            const row = tbody.insertRow();
+            row.insertCell(0).innerText = tx.uuid.substring(0,8)+'…';
+            row.insertCell(1).innerText = tx.categoryName || 'Без категории';
+            row.insertCell(2).innerText = tx.amount;
+            row.insertCell(3).innerHTML = `<span class="${tx.type==='INCOME'?'badge-income':'badge-expense'}">${tx.type==='INCOME'?'Доход':'Расход'}</span>`;
+            row.insertCell(4).innerText = tx.description || '';
+            row.insertCell(5).innerText = tx.date;
+            const btn = document.createElement('button');
+            btn.innerText = 'Удалить';
+            btn.className = 'btn-danger';
+            btn.onclick = () => deleteTransaction(tx.uuid);
+            const cell = row.insertCell(6);
+            cell.appendChild(btn);
+        }
+    }
+
+    function renderPagination(page) {
+        const container = document.getElementById('pagination');
+        container.innerHTML = '';
+        for (let i = 0; i < page.totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.innerText = i + 1;
+            if (i === currentPage) btn.classList.add('active');
+            btn.onclick = () => {
+                currentPage = i;
+                loadTransactions();
+            };
+            container.appendChild(btn);
+        }
+    }
+
+    async function deleteTransaction(uuid) {
+        if (!confirm('Удалить транзакцию?')) return;
+        try {
+            const resp = await authFetch(`/api/transactions/${uuid}`, { method: 'DELETE' });
+            if (resp.ok) {
+                loadTransactions();
+                refreshBalance();
+            } else {
+                alert('Ошибка удаления');
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    async function createTransaction() {
+        const categoryUuid = document.getElementById('catUuid').value || null;
+        const amount = parseFloat(document.getElementById('amount').value);
+        const type = document.getElementById('type').value;
+        const description = document.getElementById('description').value || null;
+        const date = document.getElementById('date').value;
+        if (isNaN(amount) || !date) {
+            alert('Заполните сумму и дату');
+            return;
+        }
+        const body = { categoryUuid, amount, type, description, date };
+        try {
+            const resp = await authFetch('/api/transactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (resp.ok) {
+                document.getElementById('createMessage').innerText = '✓ Транзакция создана';
+                setTimeout(() => document.getElementById('createMessage').innerText = '', 2000);
+                document.getElementById('amount').value = '';
+                document.getElementById('description').value = '';
+                document.getElementById('date').value = '';
+                document.getElementById('catUuid').value = '';
+                loadTransactions();
+                refreshBalance();
+            } else {
+                const err = await resp.json();
+                alert('Ошибка: ' + JSON.stringify(err));
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    // === Баланс ===
+    async function refreshBalance() {
+        const from = document.getElementById('balanceDateFrom').value;
+        const to = document.getElementById('balanceDateTo').value;
+        let url = '/api/transactions/balance';
+        const params = new URLSearchParams();
+        if (from) params.append('dateFrom', from);
+        if (to) params.append('dateTo', to);
+        if (params.toString()) url += '?' + params;
+        try {
+            const resp = await authFetch(url);
+            if (resp.ok) {
+                const data = await resp.json();
+                document.getElementById('totalIncome').innerText = data.totalIncome;
+                document.getElementById('totalExpense').innerText = data.totalExpense;
+                document.getElementById('balance').innerText = data.balance;
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    // === Аналитика ===
+    async function loadAnalytics() {
+        const from = document.getElementById('analyticsDateFrom').value;
+        const to = document.getElementById('analyticsDateTo').value;
+        const type = document.getElementById('analyticsType').value;
+        if (!from || !to) {
+            alert('Укажите обе даты');
+            return;
+        }
+        const resultDiv = document.getElementById('analyticsResult');
+        resultDiv.innerHTML = '<p>Загрузка...</p>';
+
+        if (type === 'BOTH') {
+            const expenseUrl = `/api/transactions/analytics/summary?dateFrom=${from}&dateTo=${to}&type=EXPENSE`;
+            const incomeUrl = `/api/transactions/analytics/summary?dateFrom=${from}&dateTo=${to}&type=INCOME`;
+            try {
+                const [expResp, incResp] = await Promise.all([authFetch(expenseUrl), authFetch(incomeUrl)]);
+                if (!expResp.ok || !incResp.ok) throw new Error();
+                const expData = await expResp.json();
+                const incData = await incResp.json();
+
+                let html = `<div class="analytics-row">`;
+                // Расходы
+                html += `<div class="analytics-col"><h3>📉 Расходы</h3>`;
+                if (expData.items.length === 0) html += '<p>Нет расходов за период</p>';
+                else {
+                    html += `<table class="analytics-table"><thead><tr><th>Категория</th><th>Сумма</th><th>%</th></tr></thead><tbody>`;
+                    expData.items.forEach(item => {
+                        html += `<tr><td>${item.categoryName}</td><td>${item.total}</td><td>${item.percent}%</td></tr>`;
+                    });
+                    html += `</tbody></table><div class="grand-total">Всего расходов: ${expData.grandTotal}</div>`;
+                }
+                html += `</div>`;
+                // Доходы
+                html += `<div class="analytics-col"><h3>📈 Доходы</h3>`;
+                if (incData.items.length === 0) html += '<p>Нет доходов за период</p>';
+                else {
+                    html += `<table class="analytics-table"><thead><tr><th>Категория</th><th>Сумма</th><th>%</th></tr></thead><tbody>`;
+                    incData.items.forEach(item => {
+                        html += `<tr><td>${item.categoryName}</td><td>${item.total}</td><td>${item.percent}%</td></tr>`;
+                    });
+                    html += `</tbody></table><div class="grand-total">Всего доходов: ${incData.grandTotal}</div>`;
+                }
+                html += `</div></div>`;
+                resultDiv.innerHTML = html;
+            } catch(e) {
+                resultDiv.innerHTML = '<p class="error">Ошибка загрузки аналитики</p>';
+                console.error(e);
+            }
+        } else {
+            const url = `/api/transactions/analytics/summary?dateFrom=${from}&dateTo=${to}&type=${type}`;
+            try {
+                const resp = await authFetch(url);
+                if (!resp.ok) throw new Error();
+                const data = await resp.json();
+                let html = `<h4>Общая сумма: ${data.grandTotal}</h4>`;
+                if (data.items.length === 0) html += '<p>Нет данных за период</p>';
+                else {
+                    html += `<table class="analytics-table"><thead><tr><th>Категория</th><th>Сумма</th><th>%</th></tr></thead><tbody>`;
+                    data.items.forEach(item => {
+                        html += `<tr><td>${item.categoryName}</td><td>${item.total}</td><td>${item.percent}%</td></tr>`;
+                    });
+                    html += `</tbody></table>`;
+                }
+                resultDiv.innerHTML = html;
+            } catch(e) {
+                resultDiv.innerHTML = '<p class="error">Ошибка загрузки аналитики</p>';
+                console.error(e);
+            }
+        }
+    }
+
+    // Обработчики
+    document.getElementById('applyFilters').addEventListener('click', () => {
+        currentFilters = {
+            categoryUuid: document.getElementById('filterCategoryUuid').value || null,
+            type: document.getElementById('filterType').value || null,
+            dateFrom: document.getElementById('filterDateFrom').value || null,
+            dateTo: document.getElementById('filterDateTo').value || null
+        };
+        currentPage = 0;
+        loadTransactions();
+    });
+    document.getElementById('resetFilters').addEventListener('click', () => {
+        document.getElementById('filterCategoryUuid').value = '';
+        document.getElementById('filterType').value = '';
+        document.getElementById('filterDateFrom').value = '';
+        document.getElementById('filterDateTo').value = '';
+        currentFilters = {};
+        currentPage = 0;
+        loadTransactions();
+    });
+    document.getElementById('createBtn').addEventListener('click', createTransaction);
+    document.getElementById('refreshBalanceBtn').addEventListener('click', refreshBalance);
+    document.getElementById('loadAnalyticsBtn').addEventListener('click', loadAnalytics);
+
+    window.onload = () => {
+        showLoginForm();
+    };
+</script>
 </body>
 </html>
