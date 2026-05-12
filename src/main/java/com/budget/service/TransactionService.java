@@ -46,7 +46,11 @@ public class TransactionService {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new IllegalStateException("User not authenticated");
         }
-        return (User) authentication.getPrincipal();
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof User)) {
+            throw new IllegalStateException("Principal is not of type User");
+        }
+        return (User) principal;
     }
 
     @Transactional
