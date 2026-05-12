@@ -22,6 +22,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,11 +45,11 @@ public class TransactionService {
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalStateException("User not authenticated");
+            throw new AuthenticationCredentialsNotFoundException("User not authenticated");
         }
         Object principal = authentication.getPrincipal();
         if (!(principal instanceof User)) {
-            throw new IllegalStateException("Principal is not of type User");
+            throw new AuthenticationCredentialsNotFoundException("Principal is not of type User");
         }
         return (User) principal;
     }
