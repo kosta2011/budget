@@ -53,7 +53,9 @@
             <column name="uuid" type="CHAR(36)">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <!-- user_id пока не добавляем -->
+            <column name="user_id" type="CHAR(36)">
+                <constraints nullable="false"/>
+            </column>
             <column name="category_id" type="CHAR(36)">
                 <constraints nullable="true"/>
             </column>
@@ -99,7 +101,7 @@
         </sql>
     </changeSet>
 
-    <!-- Индекс и внешний ключ для user_id (пока закомментирован, добавим позже)
+    <!-- Индекс и внешний ключ для user_id -->
     <changeSet id="6" author="developer">
         <createIndex tableName="transactions" indexName="idx_transactions_user_id">
             <column name="user_id"/>
@@ -112,6 +114,5 @@
                 referencedColumnNames="uuid"
                 onDelete="CASCADE"/>
     </changeSet>
-    -->
 
 </databaseChangeLog>
