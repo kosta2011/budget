@@ -23,10 +23,9 @@ public class Transaction {
     @Column(name = "uuid", columnDefinition = "CHAR(36)")
     private String uuid = UUID.randomUUID().toString();
 
-    // user_id – добавим позже, пока закомментируем
-    // @ManyToOne
-    // @JoinColumn(name = "user_id", nullable = false)
-    // private User user;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @ManyToOne
     @JoinColumn(name = "category_id")
