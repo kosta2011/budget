@@ -47,4 +47,7 @@ public class User {
     @Column(name = "expense_limit", precision = 12, scale = 2)
     private BigDecimal expenseLimit;
 
+    @Column(name = "last_alert_month")
+    private String lastAlertMonth; // например, "2026-05"
+
 }

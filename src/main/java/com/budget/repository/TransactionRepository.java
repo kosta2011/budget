@@ -40,7 +40,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
                                       @Param("dateTo") LocalDate dateTo,
                                       @Param("type") String type);
 
-    @Query("SELECT SUM(t.amount) FROM Transaction t WHERE t.user.uuid = :userId AND t.type = 'EXPENSE' AND t.transactionDate BETWEEN :startDate AND :endDate")
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE t.user.uuid = :userId AND t.type = 'EXPENSE' AND t.transactionDate BETWEEN :startDate AND :endDate")
     BigDecimal getExpenseSumByUserAndDateRange(@Param("userId") String userId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
 }

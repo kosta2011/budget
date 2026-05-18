@@ -27,7 +27,7 @@
     # Внутренний секретный токен (должен совпадать с токеном в Gateway)
     app:
       internal:
-        token: ${INTERNAL_TOKEN:default-secret-change-in-production}
+        token: ${INTERNAL_TOKEN}
 
     telegram:
       bot:

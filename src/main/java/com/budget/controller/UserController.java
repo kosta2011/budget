@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,21 +34,37 @@ public class UserController {
     }
 
     private User getCurrentUser() {
-        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new IllegalStateException("User not authenticated");
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof User) {
+            return (User) principal;
+        }
+        throw new IllegalStateException("Principal is not of type User");
     }
 
     @PutMapping("/telegram")
     public ResponseEntity<?> setTelegramChatId(@RequestBody Map<String, String> payload) {
+        String chatId = payload.get("chatId");
+        if (chatId == null || chatId.isBlank()) {
+            return ResponseEntity.badRequest().body("chatId must be non-blank");
+        }
         User user = getCurrentUser();
-        user.setTelegramChatId(payload.get("chatId"));
+        user.setTelegramChatId(chatId);
         userRepository.save(user);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/limit")
     public ResponseEntity<?> setExpenseLimit(@RequestBody Map<String, BigDecimal> payload) {
+        BigDecimal limit = payload.get("limit");
+        if (limit == null || limit.compareTo(BigDecimal.ZERO) <= 0) {
+            return ResponseEntity.badRequest().body("limit must be positive");
+        }
         User user = getCurrentUser();
-        user.setExpenseLimit(payload.get("limit"));
+        user.setExpenseLimit(limit);
         userRepository.save(user);
         return ResponseEntity.ok().build();
     }
