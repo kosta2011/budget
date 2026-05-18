@@ -20,12 +20,12 @@ public class TelegramNotificationService {
 
     private static final Logger log = LoggerFactory.getLogger(TelegramNotificationService.class);
 
-    @Value("${telegram.bot.token}")
-    private String botToken;
-
     private final RestTemplate restTemplate;
+    private final String botToken;
 
-    public TelegramNotificationService(RestTemplateBuilder restTemplateBuilder) {
+    public TelegramNotificationService(RestTemplateBuilder restTemplateBuilder,
+                                       @Value("${telegram.bot.token}") String botToken) {
+        this.botToken = botToken;
         this.restTemplate = restTemplateBuilder
                 .requestFactory(() -> {
                     SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
@@ -45,6 +45,7 @@ public class TelegramNotificationService {
         try {
             restTemplate.postForEntity(url, request, String.class);
         } catch (RestClientException e) {
+            // В сообщение лога не включаем детали исключения, чтобы не раскрыть токен
             log.error("Failed to send Telegram message to chatId: {}", chatId, e);
         }
     }
