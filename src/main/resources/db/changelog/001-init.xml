@@ -28,6 +28,7 @@
             </column>
             <column name="telegram_chat_id" type="VARCHAR(50)"/>
             <column name="expense_limit" type="DECIMAL(12,2)"/>
+            <column name="last_alert_month" type="VARCHAR(7)"/>
         </createTable>
     </changeSet>
 
