@@ -28,3 +28,7 @@
     app:
       internal:
         token: ${INTERNAL_TOKEN:default-secret-change-in-production}
+
+    telegram:
+      bot:
+        token: ${TELEGRAM_BOT_TOKEN}

@@ -5,7 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
 
-    <!-- Таблица users (было user) -->
+    <!-- Таблица users -->
     <changeSet id="1" author="developer">
         <createTable tableName="users">
             <column name="uuid" type="CHAR(36)">
@@ -26,10 +26,12 @@
             <column name="updated_at" type="TIMESTAMP(3)">
                 <constraints nullable="false"/>
             </column>
+            <column name="telegram_chat_id" type="VARCHAR(50)"/>
+            <column name="expense_limit" type="DECIMAL(12,2)"/>
         </createTable>
     </changeSet>
 
-    <!-- Таблица category (добавлены created_at, updated_at) -->
+    <!-- Таблица category -->
     <changeSet id="2" author="developer">
         <createTable tableName="category">
             <column name="uuid" type="CHAR(36)">
@@ -47,7 +49,7 @@
         </createTable>
     </changeSet>
 
-    <!-- Таблица transactions (было transaction, добавлен type, TIMESTAMP(3), убран user_id) -->
+    <!-- Таблица transactions -->
     <changeSet id="3" author="developer">
         <createTable tableName="transactions">
             <column name="uuid" type="CHAR(36)">
@@ -78,14 +80,11 @@
         </createTable>
     </changeSet>
 
-    <!-- Индекс и внешний ключ для category_id (как у вас было, только с новыми именами) -->
+    <!-- Индекс и внешний ключ для category_id -->
     <changeSet id="4" author="developer">
-        <!-- Индекс для category_id -->
         <createIndex tableName="transactions" indexName="idx_transactions_category_id">
             <column name="category_id"/>
         </createIndex>
-
-        <!-- Внешний ключ transactions.category_id -> category.uuid -->
         <addForeignKeyConstraint
                 baseTableName="transactions"
                 baseColumnNames="category_id"
@@ -95,6 +94,7 @@
                 onDelete="SET NULL"/>
     </changeSet>
 
+    <!-- CHECK constraint для type -->
     <changeSet id="5" author="developer">
         <sql>
             ALTER TABLE transactions ADD CONSTRAINT chk_transactions_type CHECK (type IN ('INCOME', 'EXPENSE'));

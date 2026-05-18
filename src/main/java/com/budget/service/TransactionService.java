@@ -201,4 +201,9 @@ public class TransactionService {
         }
         return new AnalyticsResponse(dateFrom, dateTo, items, grandTotal);
     }
+
+    public BigDecimal getExpenseSumForUser(String userId, LocalDate startDate, LocalDate endDate) {
+        return transactionRepository.getExpenseSumByUserAndDateRange(userId, startDate, endDate);
+    }
+
 }
