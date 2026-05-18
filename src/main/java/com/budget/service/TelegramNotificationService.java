@@ -36,7 +36,7 @@ public class TelegramNotificationService {
                 .build();
     }
 
-    public void sendMessage(String chatId, String message) {
+    public boolean sendMessage(String chatId, String message) {
         String url = "https://api.telegram.org/bot" + botToken + "/sendMessage";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -44,9 +44,11 @@ public class TelegramNotificationService {
         HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
         try {
             restTemplate.postForEntity(url, request, String.class);
+            log.debug("Telegram message sent successfully to chatId: {}", chatId);
+            return true;
         } catch (RestClientException e) {
-            // В сообщение лога не включаем детали исключения, чтобы не раскрыть токен
             log.error("Failed to send Telegram message to chatId: {}", chatId, e);
+            return false;
         }
     }
 }
