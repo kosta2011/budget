@@ -32,6 +32,7 @@ import jakarta.persistence.Tuple;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -204,6 +205,16 @@ public class TransactionService {
 
     public BigDecimal getExpenseSumForUser(String userId, LocalDate startDate, LocalDate endDate) {
         return transactionRepository.getExpenseSumByUserAndDateRange(userId, startDate, endDate);
+    }
+
+    public List<String> getExpenseDescriptionsForUser(String userId, LocalDate startDate, LocalDate endDate) {
+        List<Transaction> transactions = transactionRepository.findExpensesByUserAndDateRange(userId, startDate, endDate);
+        return transactions.stream()
+                .map(tx -> {
+                    String category = tx.getCategory() != null ? tx.getCategory().getName() : "Без категории";
+                    return category + ": " + tx.getAmount() + " руб. (" + tx.getTransactionDate() + ")";
+                })
+                .collect(Collectors.toList());
     }
 
 }
