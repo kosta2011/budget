@@ -677,6 +677,9 @@
         }
         const response = await fetch(url, options);
         const text = await response.text();
+        if (!response.ok) {
+            throw new Error(text || `HTTP ${response.status}`);
+        }
         return text;
     }
 

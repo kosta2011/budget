@@ -47,11 +47,11 @@ public class LocalLlmService {
                 return (String) response.get("response");
             } else {
                 log.error("Некорректный ответ от LLM: {}", response);
-                return "Извините, не удалось получить ответ от нейросети.";
+                throw new IllegalStateException("Некорректный ответ от LLM");
             }
         } catch (Exception e) {
             log.error("Ошибка при вызове LLM: {}", e.getMessage(), e);
-            return "Произошла ошибка при обращении к нейросети: " + e.getMessage();
+            throw new RuntimeException("Ошибка при обращении к LLM", e);
         }
     }
 

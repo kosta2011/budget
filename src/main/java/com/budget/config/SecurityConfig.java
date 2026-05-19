@@ -34,7 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/index.html", "/css/**", "/js/**", "/favicon.ico").permitAll()
                         .requestMatchers("/api/auth/verify").permitAll()
                         .requestMatchers("/api/users").permitAll()
-                        .requestMatchers("/api/llm/**").permitAll()
+                        .requestMatchers("/api/llm/**").authenticated()
                         .anyRequest().authenticated()
                 );
         return http.build();

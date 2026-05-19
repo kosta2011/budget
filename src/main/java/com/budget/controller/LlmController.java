@@ -6,6 +6,8 @@ import com.budget.service.LocalLlmService;
 import com.budget.service.TransactionService;
 import com.budget.repository.TransactionRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +30,11 @@ public class LlmController {
     }
 
     private User getCurrentUser() {
-        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof User)) {
+            throw new AuthenticationCredentialsNotFoundException("User not authenticated");
+        }
+        return (User) authentication.getPrincipal();
     }
 
     @PostMapping("/ask")
