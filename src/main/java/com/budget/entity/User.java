@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -37,4 +38,16 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    // Поле для Telegram chat_id (может быть null, если пользователь не привязал бота)
+    @Column(name = "telegram_chat_id")
+    private String telegramChatId;
+
+    // Лимит расходов на месяц (null означает, что лимит не задан)
+    @Column(name = "expense_limit", precision = 12, scale = 2)
+    private BigDecimal expenseLimit;
+
+    @Column(name = "last_alert_month")
+    private String lastAlertMonth; // например, "2026-05"
+
 }
