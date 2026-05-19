@@ -683,6 +683,15 @@
         return text;
     }
 
+    function formatAiResponse(result) {
+        try {
+            const parsed = JSON.parse(result);
+            return JSON.stringify(parsed, null, 2);
+        } catch (e) {
+            return result;
+        }
+    }
+
     analyzeBtn.addEventListener('click', async () => {
         const from = aiDateFrom.value;
         const to = aiDateTo.value;
@@ -696,7 +705,7 @@
         aiResultDiv.innerText = 'Загрузка...';
         try {
             const result = await callAiApi(url, 'POST');
-            aiResultDiv.innerText = result;
+            aiResultDiv.innerText = formatAiResponse(result);
         } catch (err) {
             aiResultDiv.innerText = 'Ошибка: ' + err.message;
         }
@@ -706,7 +715,7 @@
         aiResultDiv.innerText = 'Загрузка...';
         try {
             const result = await callAiApi('/api/llm/predict-weekly', 'GET');
-            aiResultDiv.innerText = result;
+            aiResultDiv.innerText = formatAiResponse(result);
         } catch (err) {
             aiResultDiv.innerText = 'Ошибка: ' + err.message;
         }
@@ -726,7 +735,7 @@
         aiResultDiv.innerText = 'Загрузка...';
         try {
             const result = await callAiApi(url, 'GET');
-            aiResultDiv.innerText = result;
+            aiResultDiv.innerText = formatAiResponse(result);
         } catch (err) {
             aiResultDiv.innerText = 'Ошибка: ' + err.message;
         }
