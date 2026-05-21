@@ -2,7 +2,7 @@
       application:
         name: budget
       datasource:
-          url: jdbc:mysql://localhost:3306/budget_db?useSSL=false&serverTimezone=UTC
+          url: jdbc:mysql://mysql:3306/budget_db?useSSL=false&serverTimezone=UTC
           username: root
           password: ${DB_PASSWORD}
           driver-class-name: com.mysql.cj.jdbc.Driver
@@ -23,6 +23,10 @@
       security:
         basic:
           enabled: false
+
+    llm:
+      url: http://ollama:11434/api/generate   # имя сервиса в Docker
+      model: llama3.2
 
     # Внутренний секретный токен (должен совпадать с токеном в Gateway)
     app:

@@ -318,6 +318,40 @@
         </div>
         <div id="analyticsResult"></div>
     </div>
+
+    <!-- Аналитика с помощью нейросети -->
+    <div class="card">
+        <h2>🤖 AI Аналитика</h2>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Период (от)</label>
+                <input type="date" id="aiDateFrom">
+            </div>
+            <div class="form-group">
+                <label>Период (до)</label>
+                <input type="date" id="aiDateTo">
+            </div>
+            <div class="form-group">
+                <button id="analyzeExpensesBtn">Анализировать расходы</button>
+            </div>
+            <div class="form-group">
+                <button id="predictWeeklyBtn">Прогноз на неделю</button>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Категория</label>
+                <input type="text" id="categoryForAdvice" placeholder="Например: Продукты">
+            </div>
+            <div class="form-group">
+                <button id="adviceByCategoryBtn">Совет по категории</button>
+            </div>
+        </div>
+        <div id="aiResult" style="background: #f0f4f8; padding: 12px; border-radius: 8px; margin-top: 12px; white-space: pre-wrap;">
+            Результат появится здесь...
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -620,6 +654,92 @@
     window.onload = () => {
         showLoginForm();
     };
+
+    // AI-аналитика
+    const aiDateFrom = document.getElementById('aiDateFrom');
+    const aiDateTo = document.getElementById('aiDateTo');
+    const analyzeBtn = document.getElementById('analyzeExpensesBtn');
+    const predictBtn = document.getElementById('predictWeeklyBtn');
+    const categoryInput = document.getElementById('categoryForAdvice');
+    const adviceBtn = document.getElementById('adviceByCategoryBtn');
+    const aiResultDiv = document.getElementById('aiResult');
+
+    async function callAiApi(url, method = 'POST', body = null) {
+        const options = {
+            method: method,
+            headers: {
+                'Authorization': authToken
+            }
+        };
+        if (body && (method === 'POST' || method === 'PUT')) {
+            options.headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(body);
+        }
+        const response = await fetch(url, options);
+        const text = await response.text();
+        if (!response.ok) {
+            throw new Error(text || `HTTP ${response.status}`);
+        }
+        return text;
+    }
+
+    function formatAiResponse(result) {
+        try {
+            const parsed = JSON.parse(result);
+            return JSON.stringify(parsed, null, 2);
+        } catch (e) {
+            return result;
+        }
+    }
+
+    analyzeBtn.addEventListener('click', async () => {
+        const from = aiDateFrom.value;
+        const to = aiDateTo.value;
+        let url = '/api/llm/analyze-my-expenses';
+        if (from || to) {
+            const params = new URLSearchParams();
+            if (from) params.append('dateFrom', from);
+            if (to) params.append('dateTo', to);
+            url += '?' + params.toString();
+        }
+        aiResultDiv.innerText = 'Загрузка...';
+        try {
+            const result = await callAiApi(url, 'POST');
+            aiResultDiv.innerText = formatAiResponse(result);
+        } catch (err) {
+            aiResultDiv.innerText = 'Ошибка: ' + err.message;
+        }
+    });
+
+    predictBtn.addEventListener('click', async () => {
+        aiResultDiv.innerText = 'Загрузка...';
+        try {
+            const result = await callAiApi('/api/llm/predict-weekly', 'GET');
+            aiResultDiv.innerText = formatAiResponse(result);
+        } catch (err) {
+            aiResultDiv.innerText = 'Ошибка: ' + err.message;
+        }
+    });
+
+    adviceBtn.addEventListener('click', async () => {
+        const category = categoryInput.value.trim();
+        if (!category) {
+            aiResultDiv.innerText = 'Введите категорию.';
+            return;
+        }
+        const from = aiDateFrom.value;
+        const to = aiDateTo.value;
+        let url = `/api/llm/advice-for-category?categoryName=${encodeURIComponent(category)}`;
+        if (from) url += `&dateFrom=${from}`;
+        if (to) url += `&dateTo=${to}`;
+        aiResultDiv.innerText = 'Загрузка...';
+        try {
+            const result = await callAiApi(url, 'GET');
+            aiResultDiv.innerText = formatAiResponse(result);
+        } catch (err) {
+            aiResultDiv.innerText = 'Ошибка: ' + err.message;
+        }
+    });
 </script>
 </body>
 </html>
