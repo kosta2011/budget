@@ -1,0 +1,31 @@
+TASK-09 — Telegram-уведомления о превышении лимита расходов
+Исходное состояние:
+Нет уведомлений; пользователь сам контролирует расходы.
+Что сделано:
+1.	Добавлены поля в сущность User:
+o	telegramChatId (String) – идентификатор чата в Telegram.
+o	expenseLimit (BigDecimal) – месячный лимит расходов.
+o	lastAlertMonth (String) – месяц последнего уведомления (для дедупликации).
+2.	Миграция Liquibase (007-add-telegram-fields.xml) добавляет колонки в таблицу users.
+3.	TelegramNotificationService
+o	Отправка сообщения через Bot API: POST https://api.telegram.org/bot<token>/sendMessage.
+o	Используется RestTemplate с таймаутами (connect 5s, read 10s).
+o	Логирование ошибок (без вывода токена).
+o	Метод возвращает boolean (успех / неудача).
+4.	ExpenseMonitorService (шедулер)
+o	Запуск каждый час (@Scheduled(cron = "0 0 * * * *")).
+o	Получает пользователей с непустым telegramChatId и установленным expenseLimit.
+o	Суммирует расходы за текущий месяц через transactionRepository.getExpenseSumForUser.
+o	Если сумма превышает лимит и в этом месяце ещё не отправлялось уведомление, вызывает sendMessage и при успехе обновляет lastAlertMonth.
+5.	Эндпоинты для пользователя:
+o	PUT /api/users/telegram – принимает {"chatId":"123456789"}.
+o	PUT /api/users/limit – принимает {"limit": 1000}.
+o	Валидация: chatId не пустой, limit > 0.
+Проверка:
+•	Создать Telegram бота через BotFather, получить токен.
+•	Установить переменную окружения TELEGRAM_BOT_TOKEN.
+•	Получить chat_id, отправив боту сообщение и выполнив curl https://api.telegram.org/bot<token>/getUpdates.
+•	Отправить PUT-запросы для установки chatId и лимита (например, 1000).
+•	Добавить расходные транзакции на сумму > 1000.
+•	Дождаться выполнения шедулера – получить уведомление в Telegram.
+•	Повторная отправка в том же месяце не происходит (дедупликация).

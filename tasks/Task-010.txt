@@ -1,0 +1,37 @@
+TASK-10 — Интеграция локальной нейросети (Ollama + LLaMA) для анализа расходов
+Исходное состояние:
+Нет нейросети; аналитика только по категориям (TASK-06).
+Что сделано:
+1.	Docker контейнер Ollama
+o	Образ ollama/ollama:latest, порт 11434, volume ollama_data.
+o	Модель llama3.2 загружается командой docker exec -it ollama ollama pull llama3.2.
+2.	LocalLlmService
+o	POST-запрос к http://ollama:11434/api/generate.
+o	Параметры: model=llama3.2, prompt, stream=false, temperature=0.7.
+o	Таймауты: connect 3s, read 30s.
+o	Обработка ошибок: пробрасывание исключений (не возврат строки).
+o	Метод askLlm(prompt) – базовая отправка.
+o	Метод analyzeExpenses(expenses) – формирует промпт для анализа расходов с требованием JSON.
+3.	LlmController
+o	POST /api/llm/analyze-my-expenses – принимает dateFrom/dateTo, получает расходы пользователя, вызывает нейросеть, возвращает JSON.
+o	POST /api/llm/compare-expenses – сравнение двух периодов.
+o	GET /api/llm/predict-weekly – прогноз на неделю.
+o	GET /api/llm/advice-for-category – совет по категории.
+o	Использует getCurrentUser() для определения пользователя.
+4.	Настройка безопасности
+o	В SecurityConfig монолита добавлен .httpBasic(Customizer.withDefaults()).
+o	UserIdAuthenticationFilter модифицирован для пропуска Basic Auth.
+o	В Gateway AuthFilter добавлен ранний return chain.filter(exchange) для /api/llm/** (чтобы не терять тело POST и не удалять заголовок).
+o	Эндпоинты /api/llm/** требуют аутентификации (.authenticated()).
+5.	Фронтенд (AI Аналитика)
+o	Блок с кнопками и полями (выбор периода, ввод категории).
+o	Вызовы через callAiApi (автоматически добавляет Authorization).
+o	Форматирование ответа через JSON.stringify(parsed, null, 2).
+6.	Промпты
+o	Детальные инструкции для нейросети (категории, формат JSON, правила).
+o	После оптимизации длины промпта проблема 403 (переполнение контекста) исчезла.
+Проверка:
+•	Контейнер ollama запущен, модель загружена.
+•	Пользователь авторизован (Basic Auth).
+•	Отправить POST-запрос через Insomnia или через фронтенд – получить JSON-анализ.
+•	Убедиться, что нейросеть возвращает структурированные данные (summary, by_category, insights, recommendations и т.д.).

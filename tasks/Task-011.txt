@@ -1,0 +1,28 @@
+TASK-11 — Контейнеризация и оркестрация (Docker Compose)
+Исходное состояние:
+Проект запускался локально (монолит + MySQL), Gateway и Ollama отсутствовали.
+Что сделано:
+1.	Dockerfile для монолита и Gateway
+o	Базовый образ eclipse-temurin:17-jre-alpine.
+o	Создан не root пользователь (appuser).
+o	Копирование target/*.jar и запуск java -jar app.jar.
+2.	Docker Compose (файл budget-docker/docker-compose.yml)
+o	Сервисы: mysql, monolith, gateway, ollama.
+o	Единая сеть budget-net для взаимодействия.
+o	Переменные окружения (пароль MySQL, INTERNAL_TOKEN, TELEGRAM_BOT_TOKEN) вынесены в .env (не коммитится).
+o	Healthcheck для MySQL.
+o	Volume для данных MySQL и для модели Ollama.
+3.	Настройка Gateway для работы в Docker
+o	В application.yml Gateway указан uri: http://monolith:8080 (имя сервиса в compose).
+o	Порт Gateway – 8081 (проброшен на хост).
+o	Маршруты: /api/** → монолит, /**, /index.html, /css/** → статика из монолита (чтобы отдавать фронтенд через Gateway).
+4.	Ollama в Docker
+o	Образ ollama/ollama:latest, порт 11434.
+o	Модель llama3.2 загружается отдельной командой.
+5.	Запуск всей системы
+o	Команда docker-compose up -d --build поднимает все сервисы.
+Проверка:
+•	Все контейнеры запущены (docker-compose ps).
+•	Страница логина загружается по адресу http://localhost:8081/.
+•	После входа доступны транзакции, аналитика, AI аналитика.
+•	Нейросеть отвечает (проверено через Insomnia и фронтенд).
